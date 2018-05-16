@@ -1,0 +1,1 @@
+for site in `zeald_site_manager list cluster --format=catalog_name`; do echo $site; zeald_site_manager get-variable $site SECURE_SERVER; done
