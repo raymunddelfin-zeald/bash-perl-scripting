@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# exec2.sh
+# exercise2.sh
 # Print the full path or Zest catalog with catalog.cfg is greater than 2114 bytes
 
 use warnings;

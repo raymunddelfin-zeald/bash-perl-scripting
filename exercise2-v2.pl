@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# Usage: perl exec2.pl /srv/ic-catalogs
+# Usage: perl exercise2-v2.pl /srv/ic-catalogs
 
 use strict;
 use warnings;
