@@ -1,12 +1,12 @@
+#!/usr/bin/perl
 use strict;
 use warnings;
 use 5.010;
 use Data::Dumper;
-
 use Getopt::Long;
 
-my ($hide_archived);
-GetOptions( 'hide-archived' => \$hide_archived );
+my ($all_files);
+GetOptions( 'file' => \$all_files);
 
 my $path = shift || "/mnt/d/Projects/src/ic-catalogs";
 my $path_len = length($path) + 1;
@@ -18,6 +18,9 @@ my @zest_folders = ('components', 'pages', 'logic');
 foreach my $site (@sites) {
     traverse($path, $site);
 }
+
+# Call to generate report
+create_report();
 
 sub traverse {
     my ($root, $site) = @_;
@@ -34,7 +37,7 @@ sub traverse {
 
         $current =~ /$site\/(.+)/;
         if ($1) {
-            print "folder: $1 ~ $current \n";
+            # print "folder: $1 ~ $current \n";
 
             my @custom = split /\//, $1;
 
@@ -46,14 +49,14 @@ sub traverse {
                 my $countFiles = 0;
                 $countFiles = `tree -L 1 "$current" | tail -n 1 | cut -d " " -f 3`;
 
-                my $component = $1;
-                $component =~ /components\/(.+)/;
-
                 # only add list if folder contain(s) a file
                 if ($countFiles >= 1) {
+                    my $component = $1;
+                    $component =~ /components\/(.+)/;
+
                     $customize{$1} += 1;
                 }
-            } elsif ( grep(/$custom[0]/, q|logic pages|) ) {
+            } elsif ( grep(/$custom[0]/, q|logic pages|) && $all_files) {
                 # only add files
                 $customize{$1} += 1 unless (-d "$root/$dir");
             }
@@ -62,7 +65,7 @@ sub traverse {
         if (-d "$root/$dir") {
             # travese only to current site
             if ( $current =~ /ic-catalogs\/$site/ ) {
-                # call traverse if current item is directory
+                # call traverse if current item is a directory
                 traverse("$root/$dir", $site);
             }
         }
@@ -71,4 +74,23 @@ sub traverse {
     return;
 }
 
-print "\nCustomize: " . Dumper(\%customize);
+sub create_report {
+    my $filename = 'report.csv';
+    open(my $fh, '>:encoding(UTF-8)', $filename) or die "Could not open file '$filename' $!";
+
+    # sorted by values
+    my @keys = sort { $customize{$b} <=> $customize{$a} } keys %customize;
+
+    # loop to print report
+    foreach my $key (@keys) {
+        print $fh "\"$key\",$customize{$key}\n";
+    }
+
+    # close file
+    close $fh;
+
+    print "New report generated: report.csv\n";
+    system('cat report.csv');
+}
+
+# print "\nCustomize: " . Dumper(\%customize);
